@@ -1,0 +1,57 @@
+[versions]
+ktorVersion="2.2.4"
+kotlinVersion="1.8.10"
+logbackVersion="1.2.11"
+exposedVersion="0.41.1"
+h2Version="2.1.214"
+prometheusVersion="1.6.3"
+koinKtorVersion="3.3.1"
+koinSlf4jVersion="3.3.1"
+spotlessVersion="6.16.0"
+ktfmtVersion="0.43"
+
+[libraries]
+ktorSerialization =  { module = "io.ktor:ktor-serialization-kotlinx-json-jvm", version.ref = "ktorVersion"}
+
+ktorServerCore =  { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktorVersion"}
+ktorServerContentNegotiation =  { module = "io.ktor:ktor-server-content-negotiation-jvm", version.ref = "ktorVersion"}
+ktorServerCallLogging =  { module = "io.ktor:ktor-server-call-logging-jvm", version.ref = "ktorVersion"}
+ktorServerCallId =  { module = "io.ktor:ktor-server-call-id-jvm", version.ref = "ktorVersion"}
+ktorServerMetrics =  { module = "io.ktor:ktor-server-metrics-jvm", version.ref = "ktorVersion"}
+ktorServerMetricsMicrometer =  { module = "io.ktor:ktor-server-metrics-micrometer-jvm", version.ref = "ktorVersion"}
+ktorServerResources =  { module = "io.ktor:ktor-server-resources", version.ref = "ktorVersion"}
+ktorServerSwagger =  { module = "io.ktor:ktor-server-swagger", version.ref = "ktorVersion"}
+ktorServerOpenAPI =  { module = "io.ktor:ktor-server-openapi", version.ref = "ktorVersion"}
+ktorServerCompression =  { module = "io.ktor:ktor-server-compression-jvm", version.ref = "ktorVersion"}
+ktorServerNetty =  { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktorVersion"}
+
+micrometerPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusVersion" }
+
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logbackVersion" }
+
+exposedCore =  { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedVersion"}
+exposedJdbc =  { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedVersion"}
+
+koinKtor =  { module = "io.insert-koin:koin-ktor", version.ref = "koinKtorVersion"}
+koinSlf4j =  { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koinSlf4jVersion"}
+
+ktorServerTests =  { module = "io.ktor:ktor-server-tests-jvm", version.ref = "ktorVersion"}
+kotlinJunit =  { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinVersion"}
+
+[plugins]
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion"}
+ktor = { id = "io.ktor.plugin", version.ref = "ktorVersion" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotlessVersion" }
+
+[bundles]
+ktorCore = ["ktorServerCore", "ktorServerNetty", "ktorSerialization"]
+ktorSwagger = ["ktorServerSwagger", "ktorServerOpenAPI"]
+ktorContentNegotiation = ["ktorServerContentNegotiation"]
+ktorResources = ["ktorServerResources"]
+ktorCompression = ["ktorServerCompression"]
+logging = ["ktorServerCallLogging", "ktorServerCallId", "logback"]
+micrometerMetrics = ["ktorServerMetrics", "ktorServerMetricsMicrometer", "micrometerPrometheus"]
+exposed = ["exposedCore", "exposedJdbc"]
+koin = ["koinKtor", "koinSlf4j"]
+tests = ["ktorServerTests", "kotlinJunit"]
