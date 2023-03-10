@@ -1,4 +1,4 @@
-rootProject.name = "ingestor"
+rootProject.name = "eventstore"
 
 dependencyResolutionManagement {
     versionCatalogs {
@@ -7,5 +7,3 @@ dependencyResolutionManagement {
         }
     }
 }
-
-includeBuild ("../../shared/eventstore")

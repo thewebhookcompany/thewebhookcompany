@@ -1,4 +1,4 @@
-rootProject.name = "company.thewebhook"
+rootProject.name = "backend"
 
 val projectDirs = listOf(
     "shared",
