@@ -75,7 +75,7 @@ fun Application.module() = launch {
                             )
                         )
                     try {
-                        val res = producer.publish(serverHost, webhookData)
+                        val res = producer.publish("$serverHost-incoming", webhookData)
                         call.respond(
                             if (res) {
                                 HttpStatusCode.OK
