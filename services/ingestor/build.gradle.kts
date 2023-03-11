@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
-group = "company.thewebhook.ingestor"
+group = "company.thewebhook"
 version = "0.0.1"
 application {
     mainClass.set("company.thewebhook.ingestor.ApplicationKt")
@@ -17,6 +17,10 @@ application {
 
 repositories {
     mavenCentral()
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 spotless {
@@ -30,13 +34,20 @@ tasks.build {
 }
 
 dependencies {
+    implementation("company.thewebhook:messagestore")
+
     implementation(libs.bundles.ktorCore)
-    implementation(libs.bundles.ktorContentNegotiation)
-    implementation(libs.bundles.ktorResources)
-    implementation(libs.bundles.ktorCompression)
-    implementation(libs.bundles.logging)
-    implementation(libs.bundles.micrometerMetrics)
-    implementation(libs.bundles.exposed)
-    implementation(libs.bundles.koin)
-    testImplementation(libs.bundles.tests)
+    implementation(libs.bundles.ktorUtil)
+    implementation(libs.bundles.ktorMetrics)
+
+    implementation(libs.kotlinSerializationCbor)
+
+    implementation(libs.kotlinxDateTime)
+
+    implementation(libs.koinKtor)
+    implementation(libs.koinSlf4j)
+
+    implementation(libs.kafkaClients)
+    testImplementation(libs.ktorServerTests)
+    testImplementation(libs.kotlinJunit)
 }

@@ -8,8 +8,6 @@ import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import io.micrometer.prometheus.*
 import java.util.concurrent.TimeUnit
 import org.slf4j.event.*

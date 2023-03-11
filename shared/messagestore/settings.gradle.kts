@@ -1,4 +1,4 @@
-rootProject.name = "ingestor"
+rootProject.name = "messagestore"
 
 dependencyResolutionManagement {
     versionCatalogs {
@@ -7,5 +7,3 @@ dependencyResolutionManagement {
         }
     }
 }
-
-includeBuild ("../../shared/messagestore")

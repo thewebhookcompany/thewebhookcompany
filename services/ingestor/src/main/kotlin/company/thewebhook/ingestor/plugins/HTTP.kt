@@ -2,6 +2,7 @@ package company.thewebhook.ingestor.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.compression.*
+import io.ktor.server.plugins.forwardedheaders.*
 
 fun Application.configureHTTP() {
     install(Compression) {
@@ -11,4 +12,6 @@ fun Application.configureHTTP() {
             minimumSize(1024) // condition
         }
     }
+    /** Use this only if behind a trusted proxy */
+    install(XForwardedHeaders) { useFirstProxy() }
 }
