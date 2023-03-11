@@ -2,10 +2,10 @@ package company.thewebhook.ingestor
 
 import company.thewebhook.eventstore.MessageTooLargeException
 import company.thewebhook.eventstore.Producer
+import company.thewebhook.ingestor.models.WebhookRequestData
 import company.thewebhook.ingestor.plugins.*
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.config.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -15,23 +15,11 @@ import io.ktor.util.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 import org.koin.ktor.ext.inject
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
-
-@Serializable
-data class WebhookRequestData(
-    val method: String,
-    val uri: String,
-    val headers: Map<String, List<String>>,
-    val body: String,
-    val receivedAt: Long,
-    val senderHost: String,
-    val serverHost: String,
-)
 
 @ExperimentalSerializationApi
 fun Application.module() = launch {
