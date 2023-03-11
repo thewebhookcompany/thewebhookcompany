@@ -8,4 +8,4 @@ dependencyResolutionManagement {
     }
 }
 
-includeBuild ("../../shared/eventstore")
+includeBuild ("../../shared/messagestore")

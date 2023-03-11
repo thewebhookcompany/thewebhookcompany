@@ -1,4 +1,4 @@
-rootProject.name = "eventstore"
+rootProject.name = "messagestore"
 
 dependencyResolutionManagement {
     versionCatalogs {

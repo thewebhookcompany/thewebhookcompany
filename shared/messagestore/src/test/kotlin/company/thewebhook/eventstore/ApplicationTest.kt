@@ -1,4 +1,4 @@
-package company.thewebhook.eventstore
+package company.thewebhook.messagestore
 
 import kotlin.test.*
 

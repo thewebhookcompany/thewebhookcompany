@@ -34,7 +34,7 @@ tasks.build {
 }
 
 dependencies {
-    implementation("company.thewebhook:eventstore")
+    implementation("company.thewebhook:messagestore")
 
     implementation(libs.bundles.ktorCore)
     implementation(libs.bundles.ktorUtil)

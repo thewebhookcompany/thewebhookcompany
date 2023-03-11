@@ -1,9 +1,9 @@
 package company.thewebhook.ingestor
 
-import company.thewebhook.eventstore.MessageTooLargeException
-import company.thewebhook.eventstore.Producer
 import company.thewebhook.ingestor.models.WebhookRequestData
 import company.thewebhook.ingestor.plugins.*
+import company.thewebhook.messagestore.MessageTooLargeException
+import company.thewebhook.messagestore.Producer
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -23,9 +23,9 @@ fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 @ExperimentalSerializationApi
 fun Application.module() = launch {
-    val eventStoreConfig =
+    val messageStoreConfig =
         environment.config
-            .config("event-store.producer")
+            .config("messagestore.producer")
             .toMap()
             .filterValues { it is String }
             .mapValues { it.value as String }
@@ -48,7 +48,7 @@ fun Application.module() = launch {
             .split(",")
 
     val producer by inject<Producer<ByteArray>>()
-    producer.connect(eventStoreConfig)
+    producer.connect(messageStoreConfig)
 
     routing {
         HttpMethod.DefaultMethods.forEach {

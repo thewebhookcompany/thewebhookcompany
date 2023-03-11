@@ -1,7 +1,7 @@
 package company.thewebhook.ingestor.plugins
 
-import company.thewebhook.eventstore.KafkaProducer
-import company.thewebhook.eventstore.Producer
+import company.thewebhook.messagestore.KafkaProducer
+import company.thewebhook.messagestore.Producer
 import io.ktor.server.application.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
