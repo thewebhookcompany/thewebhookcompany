@@ -12,17 +12,17 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import kotlin.text.Regex
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 import org.koin.ktor.ext.inject
-import kotlin.text.Regex
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
-class ServerHostRegexException(message:String): Exception(message)
+class ServerHostRegexException(message: String) : Exception(message)
 
 @ExperimentalSerializationApi
 fun Application.module() = launch {
@@ -51,20 +51,26 @@ fun Application.module() = launch {
             .split(",")
 
     val serverHostRegexString =
-        environment.config
-            .propertyOrNull("ingestor.regex.serverhost")?.getString()
+        environment.config.propertyOrNull("ingestor.validation.serverHostRegex")?.getString()
             ?: throw ServerHostRegexException("Serverhost regex string not provided")
 
     val producer by inject<Producer<ByteArray>>()
     producer.connect(messageStoreConfig)
 
+    val serverHostRegex = Regex(serverHostRegexString)
+
     routing {
         HttpMethod.DefaultMethods.forEach {
             route("{...}", it) {
                 handle {
-                    val serverHostRegex = Regex(serverHostRegexString)
-                    val serverHost = call.request.origin.serverHost
+                    val serverHost = call.request.origin.serverHost.lowercase()
                     val remoteHost = call.request.origin.remoteHost
+
+                    if (!serverHostRegex.matches(serverHost)) {
+                        call.application.log.error("Invalid server host")
+                        call.respond(HttpStatusCode.Forbidden)
+                        return@handle
+                    }
 
                     val webhookData =
                         Cbor.encodeToByteArray(
@@ -84,32 +90,26 @@ fun Application.module() = launch {
                             )
                         )
 
-                    if(serverHostRegex.matches(serverHost)) {
-                        try {
-                            val res = producer.publish("$serverHost-incoming", webhookData)
-                            call.respond(
-                                if (res) {
-                                    HttpStatusCode.OK
-                                } else {
-                                    call.application.log.error("Publishing webhook data returned false")
-                                    HttpStatusCode.InternalServerError
-                                }
-                            )
-                        } catch (e: Exception) {
-                            call.application.log.error("Exception thrown on publishing webhook data", e)
-                            when (e) {
-                                is MessageTooLargeException -> {
-                                    call.respond(HttpStatusCode.PayloadTooLarge)
-                                }
-                                else -> {
-                                    call.respond(HttpStatusCode.InternalServerError)
-                                }
+                    try {
+                        val res = producer.publish("$serverHost-incoming", webhookData)
+                        call.respond(
+                            if (res) {
+                                HttpStatusCode.OK
+                            } else {
+                                call.application.log.error("Publishing webhook data returned false")
+                                HttpStatusCode.InternalServerError
+                            }
+                        )
+                    } catch (e: Exception) {
+                        call.application.log.error("Exception thrown on publishing webhook data", e)
+                        when (e) {
+                            is MessageTooLargeException -> {
+                                call.respond(HttpStatusCode.PayloadTooLarge)
+                            }
+                            else -> {
+                                call.respond(HttpStatusCode.InternalServerError)
                             }
                         }
-                    }
-                    else {
-                        call.application.log.error("Invalid server host")
-                        call.respond(HttpStatusCode.Forbidden)
                     }
                 }
             }
