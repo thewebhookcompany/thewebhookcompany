@@ -18,8 +18,11 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 import org.koin.ktor.ext.inject
+import kotlin.text.Regex
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
+
+class ServerHostRegexException(message:String): Exception(message)
 
 @ExperimentalSerializationApi
 fun Application.module() = launch {
@@ -47,6 +50,15 @@ fun Application.module() = launch {
             .lowercase()
             .split(",")
 
+    val serverHostRegexString =
+        environment.config
+            .propertyOrNull("ingestor.regex.serverhost")?
+            .getString();
+
+    if(serverHostRegexString == null) {
+        throw ServerHostRegexException("Serverhost regex string not provided")
+    }
+
     val producer by inject<Producer<ByteArray>>()
     producer.connect(messageStoreConfig)
 
@@ -54,6 +66,7 @@ fun Application.module() = launch {
         HttpMethod.DefaultMethods.forEach {
             route("{...}", it) {
                 handle {
+                    val serverHostRegex = Regex(serverHostRegexString)
                     val serverHost = call.request.origin.serverHost
                     val remoteHost = call.request.origin.remoteHost
 
@@ -74,26 +87,33 @@ fun Application.module() = launch {
                                 serverHost,
                             )
                         )
-                    try {
-                        val res = producer.publish("$serverHost-incoming", webhookData)
-                        call.respond(
-                            if (res) {
-                                HttpStatusCode.OK
-                            } else {
-                                call.application.log.error("Publishing webhook data returned false")
-                                HttpStatusCode.InternalServerError
-                            }
-                        )
-                    } catch (e: Exception) {
-                        call.application.log.error("Exception thrown on publishing webhook data", e)
-                        when (e) {
-                            is MessageTooLargeException -> {
-                                call.respond(HttpStatusCode.PayloadTooLarge)
-                            }
-                            else -> {
-                                call.respond(HttpStatusCode.InternalServerError)
+
+                    if(serverHostRegex.matches(serverHost)) {
+                        try {
+                            val res = producer.publish("$serverHost-incoming", webhookData)
+                            call.respond(
+                                if (res) {
+                                    HttpStatusCode.OK
+                                } else {
+                                    call.application.log.error("Publishing webhook data returned false")
+                                    HttpStatusCode.InternalServerError
+                                }
+                            )
+                        } catch (e: Exception) {
+                            call.application.log.error("Exception thrown on publishing webhook data", e)
+                            when (e) {
+                                is MessageTooLargeException -> {
+                                    call.respond(HttpStatusCode.PayloadTooLarge)
+                                }
+                                else -> {
+                                    call.respond(HttpStatusCode.InternalServerError)
+                                }
                             }
                         }
+                    }
+                    else {
+                        call.application.log.error("Invalid server host")
+                        call.respond(HttpStatusCode(403, "Invalid server host"))
                     }
                 }
             }
