@@ -52,12 +52,8 @@ fun Application.module() = launch {
 
     val serverHostRegexString =
         environment.config
-            .propertyOrNull("ingestor.regex.serverhost")?
-            .getString();
-
-    if(serverHostRegexString == null) {
-        throw ServerHostRegexException("Serverhost regex string not provided")
-    }
+            .propertyOrNull("ingestor.regex.serverhost")?.getString()
+            ?: throw ServerHostRegexException("Serverhost regex string not provided")
 
     val producer by inject<Producer<ByteArray>>()
     producer.connect(messageStoreConfig)
@@ -113,7 +109,7 @@ fun Application.module() = launch {
                     }
                     else {
                         call.application.log.error("Invalid server host")
-                        call.respond(HttpStatusCode(403, "Invalid server host"))
+                        call.respond(HttpStatusCode.Forbidden)
                     }
                 }
             }
