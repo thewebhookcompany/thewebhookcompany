@@ -22,7 +22,7 @@ import org.koin.ktor.ext.inject
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
-class ServerHostRegexException(message: String) : Exception(message)
+class ApplicationConfigException(message: String) : Exception(message)
 
 @ExperimentalSerializationApi
 fun Application.module() = launch {
@@ -52,7 +52,9 @@ fun Application.module() = launch {
 
     val serverHostRegexString =
         environment.config.propertyOrNull("ingestor.validation.serverHostRegex")?.getString()
-            ?: throw ServerHostRegexException("Serverhost regex string not provided")
+            ?: throw ApplicationConfigException(
+                "ingestor.validation.serverHostRegex cannot be empty"
+            )
 
     val producer by inject<Producer<ByteArray>>()
     producer.connect(messageStoreConfig)
@@ -64,11 +66,13 @@ fun Application.module() = launch {
             route("{...}", it) {
                 handle {
                     val serverHost = call.request.origin.serverHost.lowercase()
-                    val remoteHost = call.request.origin.remoteHost
+                    val remoteHost = call.request.origin.remoteHost.lowercase()
 
                     if (!serverHostRegex.matches(serverHost)) {
-                        call.application.log.error("Invalid server host")
-                        call.respond(HttpStatusCode.Forbidden)
+                        call.application.log.error(
+                            "Server host does not match the regex. Server Host: $serverHost, Remote Host: $remoteHost."
+                        )
+                        call.respond(HttpStatusCode.BadRequest, "HOST_INVALID")
                         return@handle
                     }
 
