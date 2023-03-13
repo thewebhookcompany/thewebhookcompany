@@ -12,6 +12,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import kotlin.text.Regex
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -20,6 +21,8 @@ import kotlinx.serialization.encodeToByteArray
 import org.koin.ktor.ext.inject
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
+
+class ApplicationConfigException(message: String) : Exception(message)
 
 @ExperimentalSerializationApi
 fun Application.module() = launch {
@@ -47,15 +50,31 @@ fun Application.module() = launch {
             .lowercase()
             .split(",")
 
+    val serverHostRegexString =
+        environment.config.propertyOrNull("ingestor.validation.serverHostRegex")?.getString()
+            ?: throw ApplicationConfigException(
+                "ingestor.validation.serverHostRegex cannot be empty"
+            )
+
     val producer by inject<Producer<ByteArray>>()
     producer.connect(messageStoreConfig)
+
+    val serverHostRegex = Regex(serverHostRegexString)
 
     routing {
         HttpMethod.DefaultMethods.forEach {
             route("{...}", it) {
                 handle {
-                    val serverHost = call.request.origin.serverHost
-                    val remoteHost = call.request.origin.remoteHost
+                    val serverHost = call.request.origin.serverHost.lowercase()
+                    val remoteHost = call.request.origin.remoteHost.lowercase()
+
+                    if (!serverHostRegex.matches(serverHost)) {
+                        call.application.log.error(
+                            "Server host does not match the regex. Server Host: $serverHost, Remote Host: $remoteHost."
+                        )
+                        call.respond(HttpStatusCode.BadRequest, "HOST_INVALID")
+                        return@handle
+                    }
 
                     val webhookData =
                         Cbor.encodeToByteArray(
@@ -74,6 +93,7 @@ fun Application.module() = launch {
                                 serverHost,
                             )
                         )
+
                     try {
                         val res = producer.publish("$serverHost-incoming", webhookData)
                         call.respond(
