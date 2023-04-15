@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 
 class KafkaConsumerImpl<T>(
     private val readTimeout: Duration,
-) : Consumer<T> {
+) : Consumer<T>() {
     private val instanceId = generateBase64Uuid()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var consumerClient: KafkaConsumer<String, T>? = null

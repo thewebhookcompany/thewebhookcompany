@@ -3,8 +3,8 @@ package company.thewebhook.ingestor
 import company.thewebhook.ingestor.models.WebhookRequestData
 import company.thewebhook.ingestor.plugins.*
 import company.thewebhook.messagestore.producer.Producer
+import company.thewebhook.messagestore.util.ApplicationEnv
 import company.thewebhook.messagestore.util.MessageTooLargeException
-import company.thewebhook.messagestore.util.getProducerConfigFromEnv
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -25,6 +25,13 @@ fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 class ApplicationConfigException(message: String) : Exception(message)
 
+const val ingestorBlacklistedHeadersEnvKey =
+    "${ApplicationEnv.envPrefix}INGESTOR_BLACKLISTED_HEADERS"
+const val ingestorBlacklistedHeaderPrefixesEnvKey =
+    "${ApplicationEnv.envPrefix}INGESTOR_BLACKLISTED_HEADER_PREFIXES"
+const val ingestorServerHostValidationRegexEnvKey =
+    "${ApplicationEnv.envPrefix}INGESTOR_SERVER_HOST_VALIDATION_REGEX"
+
 @ExperimentalSerializationApi
 fun Application.module() = launch {
     configureSerialization()
@@ -32,18 +39,21 @@ fun Application.module() = launch {
     configureHTTP()
     configureKoin()
     configureRouting()
-    val blacklistedHeaders = System.getenv("INGESTOR_BLACKLISTED_HEADERS").lowercase().split(",")
+    val blacklistedHeaders =
+        ApplicationEnv.getOrDefault(ingestorBlacklistedHeadersEnvKey, "").lowercase().split(",")
     val blacklistedHeaderPrefixes =
-        System.getenv("INGESTOR_BLACKLISTED_HEADER_PREFIXES").lowercase().split(",")
+        ApplicationEnv.getOrDefault(ingestorBlacklistedHeaderPrefixesEnvKey, "")
+            .lowercase()
+            .split(",")
 
     val serverHostRegexString =
-        System.getenv("INGESTOR_VALIDATION_SERVER_HOST_REGEX")
+        System.getenv(ingestorServerHostValidationRegexEnvKey)
             ?: throw ApplicationConfigException(
-                "INGESTOR_VALIDATION_SERVER_HOST_REGEX cannot be empty"
+                "$ingestorServerHostValidationRegexEnvKey cannot be empty"
             )
 
     val producer by inject<Producer<ByteArray>>()
-    producer.connect(getProducerConfigFromEnv())
+    producer.connect(Producer.getConfigFromEnv())
 
     val serverHostRegex = Regex(serverHostRegexString)
 

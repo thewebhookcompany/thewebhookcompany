@@ -18,7 +18,7 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class KafkaProducerImpl<T> : Producer<T> {
+class KafkaProducerImpl<T> : Producer<T>() {
     private val instanceId = generateBase64Uuid()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var producerClient: KafkaProducer<String, T>? = null
