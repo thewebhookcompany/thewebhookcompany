@@ -1,10 +1,15 @@
-package company.thewebhook.messagestore
+package company.thewebhook.messagestore.producer
 
+import company.thewebhook.messagestore.util.EmptyResultException
+import company.thewebhook.messagestore.util.MessageTooLargeException
+import company.thewebhook.messagestore.util.NotConnectedException
+import company.thewebhook.messagestore.util.generateBase64Uuid
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.*
-import org.apache.kafka.clients.producer.KafkaProducer as KProducer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
@@ -13,36 +18,25 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-interface Producer<T> {
-    suspend fun connect(config: Map<String, String>)
-    suspend fun publish(topic: String, message: T): Boolean
-    suspend fun close()
-}
-
-class NotConnectedException(message: String) : Exception(message)
-
-class MessageTooLargeException : Exception()
-
-class EmptyResultException : Exception()
-
-class KafkaProducer<T> : Producer<T> {
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private var producerClient: KProducer<String, T>? = null
+class KafkaProducerImpl<T> : Producer<T>() {
+    private val instanceId = generateBase64Uuid()
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
+    private var producerClient: KafkaProducer<String, T>? = null
     private var config: Map<String, String>? = null
 
     override suspend fun connect(config: Map<String, String>) {
         logger.debug("Attempting to connect")
         if (producerClient !== null) {
-            logger.debug("Existing producer client found. Closing its connection...")
+            logger.debug("Existing client found. Closing its connection...")
             this.close()
-            logger.debug("Existing producer client connection closed")
+            logger.debug("Existing client connection closed")
         }
         val stringSerializerClassName =
             StringSerializer::class.qualifiedName
                 ?: throw Exception("Cannot get the qualified name for string serializer")
         this.config =
             config + (ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to stringSerializerClassName)
-        producerClient = KProducer(this.config)
+        producerClient = KafkaProducer(this.config)
         logger.debug("Connection established")
     }
 
@@ -75,15 +69,15 @@ class KafkaProducer<T> : Producer<T> {
                 }
             }
         }
-            ?: throw NotConnectedException("Producer is not connected to the cluster")
+            ?: throw NotConnectedException()
     }
 
     override suspend fun close() {
         withContext(Dispatchers.IO) {
-            logger.debug("Closing producer connection")
+            logger.debug("Closing connection")
             producerClient?.close()
             producerClient = null
-            logger.debug("Producer connection closed")
+            logger.debug("Connection closed")
         }
     }
 }

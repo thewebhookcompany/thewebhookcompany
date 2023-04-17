@@ -2,8 +2,9 @@ package company.thewebhook.ingestor
 
 import company.thewebhook.ingestor.models.WebhookRequestData
 import company.thewebhook.ingestor.plugins.*
-import company.thewebhook.messagestore.MessageTooLargeException
-import company.thewebhook.messagestore.Producer
+import company.thewebhook.messagestore.producer.Producer
+import company.thewebhook.messagestore.util.ApplicationEnv
+import company.thewebhook.messagestore.util.MessageTooLargeException
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -24,40 +25,35 @@ fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 class ApplicationConfigException(message: String) : Exception(message)
 
+const val ingestorBlacklistedHeadersEnvKey =
+    "${ApplicationEnv.envPrefix}INGESTOR_BLACKLISTED_HEADERS"
+const val ingestorBlacklistedHeaderPrefixesEnvKey =
+    "${ApplicationEnv.envPrefix}INGESTOR_BLACKLISTED_HEADER_PREFIXES"
+const val ingestorServerHostValidationRegexEnvKey =
+    "${ApplicationEnv.envPrefix}INGESTOR_SERVER_HOST_VALIDATION_REGEX"
+
 @ExperimentalSerializationApi
 fun Application.module() = launch {
-    val messageStoreConfig =
-        environment.config
-            .config("messagestore.producer")
-            .toMap()
-            .filterValues { it is String }
-            .mapValues { it.value as String }
     configureSerialization()
     configureMonitoring()
     configureHTTP()
     configureKoin()
     configureRouting()
     val blacklistedHeaders =
-        environment.config
-            .property("ingestor.blacklisted.headers")
-            .getString()
-            .lowercase()
-            .split(",")
+        ApplicationEnv.getOrDefault(ingestorBlacklistedHeadersEnvKey, "").lowercase().split(",")
     val blacklistedHeaderPrefixes =
-        environment.config
-            .property("ingestor.blacklisted.headerPrefixes")
-            .getString()
+        ApplicationEnv.getOrDefault(ingestorBlacklistedHeaderPrefixesEnvKey, "")
             .lowercase()
             .split(",")
 
     val serverHostRegexString =
-        environment.config.propertyOrNull("ingestor.validation.serverHostRegex")?.getString()
+        System.getenv(ingestorServerHostValidationRegexEnvKey)
             ?: throw ApplicationConfigException(
-                "ingestor.validation.serverHostRegex cannot be empty"
+                "$ingestorServerHostValidationRegexEnvKey cannot be empty"
             )
 
     val producer by inject<Producer<ByteArray>>()
-    producer.connect(messageStoreConfig)
+    producer.connect(Producer.getConfigFromEnv())
 
     val serverHostRegex = Regex(serverHostRegexString)
 
