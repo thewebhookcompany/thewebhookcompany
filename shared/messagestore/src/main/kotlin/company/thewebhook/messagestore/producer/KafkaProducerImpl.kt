@@ -1,9 +1,7 @@
 package company.thewebhook.messagestore.producer
 
-import company.thewebhook.messagestore.util.EmptyResultException
-import company.thewebhook.messagestore.util.MessageTooLargeException
-import company.thewebhook.messagestore.util.NotConnectedException
-import company.thewebhook.messagestore.util.generateBase64Uuid
+import company.thewebhook.util.*
+import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -19,7 +17,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class KafkaProducerImpl<T> : Producer<T>() {
-    private val instanceId = generateBase64Uuid()
+    private val instanceId = UUID.randomUUID().toBase64()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var producerClient: KafkaProducer<String, T>? = null
     private var config: Map<String, String>? = null

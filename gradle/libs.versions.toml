@@ -13,6 +13,7 @@ spotlessVersion="6.16.0"
 ktfmtVersion="0.43"
 kafkaLibVersion="3.4.0"
 kotlinxDateTimeVersion="0.4.0"
+pulsarClientVersion="3.0.0"
 
 [libraries]
 kotlinCore = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinVersion" }
@@ -51,6 +52,8 @@ kotlinJunit =  { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref 
 kafkaClients =  { module = "org.apache.kafka:kafka-clients", version.ref = "kafkaLibVersion"}
 
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTimeVersion" }
+
+pulsarClient = { module = "org.apache.pulsar:pulsar-client", version.ref = "pulsarClientVersion" }
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion"}

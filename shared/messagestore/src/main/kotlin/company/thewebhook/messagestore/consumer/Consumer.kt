@@ -1,6 +1,6 @@
 package company.thewebhook.messagestore.consumer
 
-import company.thewebhook.messagestore.util.ApplicationEnv
+import company.thewebhook.util.ApplicationEnv
 
 abstract class Consumer<T> {
     companion object {

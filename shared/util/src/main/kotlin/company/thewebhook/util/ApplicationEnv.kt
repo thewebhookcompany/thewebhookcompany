@@ -1,4 +1,4 @@
-package company.thewebhook.messagestore.util
+package company.thewebhook.util
 
 object ApplicationEnv {
     const val envPrefix = "TWC_CONFIG_"

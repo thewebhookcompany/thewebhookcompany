@@ -1,6 +1,6 @@
-package company.thewebhook.messagestore.util
+package company.thewebhook.util
 
-class NotConnectedException() : Exception()
+class NotConnectedException : Exception()
 
 class MessageTooLargeException : Exception()
 

@@ -1,8 +1,9 @@
 package company.thewebhook.messagestore.consumer
 
-import company.thewebhook.messagestore.util.NotConnectedException
-import company.thewebhook.messagestore.util.generateBase64Uuid
+import company.thewebhook.util.NotConnectedException
+import company.thewebhook.util.toBase64
 import java.time.Duration
+import java.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory
 class KafkaConsumerImpl<T>(
     private val readTimeout: Duration,
 ) : Consumer<T>() {
-    private val instanceId = generateBase64Uuid()
+    private val instanceId = UUID.randomUUID().toBase64()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var consumerClient: KafkaConsumer<String, T>? = null
     private var config: Map<String, String>? = null
@@ -55,7 +56,7 @@ class KafkaConsumerImpl<T>(
         consumerClient?.let { withContext(Dispatchers.IO) { it.unsubscribe() } }
             ?: throw NotConnectedException()
     }
-    override suspend fun read(): List<Consumer.Record<T>> {
+    override suspend fun read(): List<Record<T>> {
         logger.trace("Consuming messages")
         return consumerClient?.let { consumer ->
             withContext(Dispatchers.IO) {
