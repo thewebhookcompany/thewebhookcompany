@@ -2,8 +2,8 @@ package company.thewebhook.messagestore.consumer
 
 import company.thewebhook.util.NotConnectedException
 import company.thewebhook.util.toBase64
-import java.time.Duration
 import java.util.*
+import kotlin.time.Duration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -20,10 +20,11 @@ class KafkaConsumerImpl<T>(
     private val instanceId = UUID.randomUUID().toBase64()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var consumerClient: KafkaConsumer<String, T>? = null
-    private var config: Map<String, String>? = null
+    private var config: Map<String, Any?>? = null
     private var topics: List<String>? = null
+    private val readTimeoutJavaClass = java.time.Duration.ofMillis(readTimeout.inWholeMilliseconds)
 
-    override suspend fun connect(config: Map<String, String>) {
+    override suspend fun connect(config: Map<String, Any?>) {
         logger.debug("Attempting to connect")
         consumerClient?.let {
             logger.debug("Existing client found. Closing its connection...")
@@ -60,9 +61,9 @@ class KafkaConsumerImpl<T>(
         logger.trace("Consuming messages")
         return consumerClient?.let { consumer ->
             withContext(Dispatchers.IO) {
-                val records = consumer.poll(readTimeout)
+                val records = consumer.poll(readTimeoutJavaClass)
                 records
-                    .map { Consumer.Record(it.topic(), it.value()) }
+                    .map { Record(it.topic(), it.value()) }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }

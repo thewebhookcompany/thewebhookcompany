@@ -11,19 +11,8 @@ object ApplicationEnv {
         return applicationEnvConfig.getOrDefault(key, null)
     }
 
-    fun getOrDefault(key: String, default: String): String {
-        return this.get(key) ?: default
-    }
-
-    fun getAllMatchingPrefix(prefix: String, removePrefixFromKeys: Boolean): Map<String, String> {
-        return applicationEnvConfig
-            .filter { it.key.startsWith(prefix) && it.value.isNotEmpty() }
-            .let { map ->
-                if (removePrefixFromKeys) {
-                    map.mapKeys { it.key.removePrefix(prefix) }
-                } else {
-                    map
-                }
-            }
+    fun get(key: String, default: String): String {
+        val v = this.get(key)
+        return (if (v?.isNotBlank() == true) v else null) ?: default
     }
 }

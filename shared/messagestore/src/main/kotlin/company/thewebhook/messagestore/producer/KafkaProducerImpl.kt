@@ -20,9 +20,9 @@ class KafkaProducerImpl<T> : Producer<T>() {
     private val instanceId = UUID.randomUUID().toBase64()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var producerClient: KafkaProducer<String, T>? = null
-    private var config: Map<String, String>? = null
+    private var config: Map<String, Any?>? = null
 
-    override suspend fun connect(config: Map<String, String>) {
+    override suspend fun connect(config: Map<String, Any?>) {
         logger.debug("Attempting to connect")
         if (producerClient !== null) {
             logger.debug("Existing client found. Closing its connection...")

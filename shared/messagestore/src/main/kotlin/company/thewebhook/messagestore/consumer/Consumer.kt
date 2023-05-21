@@ -1,11 +1,31 @@
 package company.thewebhook.messagestore.consumer
 
-import company.thewebhook.util.ApplicationEnv
+import company.thewebhook.messagestore.Provider
+import company.thewebhook.util.ConfigException
+import kotlin.time.Duration
 
 abstract class Consumer<T> {
     companion object {
-        private const val configEnvPrefix = "${ApplicationEnv.envPrefix}CONSUMER_CONFIG_"
-        fun getConfigFromEnv() = ApplicationEnv.getAllMatchingPrefix(this.configEnvPrefix, true)
+        inline fun <reified T> get(provider: Provider, readTimeout: Duration): Consumer<T> {
+            return when (provider) {
+                Provider.KafkaConsumer -> {
+                    KafkaConsumerImpl(readTimeout)
+                }
+                Provider.PulsarConsumer -> {
+                    if (T::class == ByteArray::class) {
+                        @Suppress("UNCHECKED_CAST")
+                        PulsarConsumerImpl(readTimeout) as Consumer<T>
+                    } else {
+                        throw ConfigException(
+                            "Pulsar Consumer Provider currently does not support any other type other than ByteArray"
+                        )
+                    }
+                }
+                else -> {
+                    throw ConfigException("Unrecognized provider $provider in Consumer.get")
+                }
+            }
+        }
     }
 
     data class Record<T>(
@@ -13,7 +33,7 @@ abstract class Consumer<T> {
         val message: T,
     )
 
-    abstract suspend fun connect(config: Map<String, String>)
+    abstract suspend fun connect(config: Map<String, Any?>)
 
     // Subscribes to the topics given in the list.
     // It will completely replace the existing topic

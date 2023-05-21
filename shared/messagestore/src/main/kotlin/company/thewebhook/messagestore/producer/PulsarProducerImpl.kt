@@ -19,14 +19,13 @@ class PulsarProducerImpl : DelayedProducer<ByteArray>() {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var client: PulsarClient? = null
     private var producers: MutableMap<String, PulsarProducerClient<ByteArray>> = mutableMapOf()
-    private var producerConfig: Map<String, String>? = null
+    private var producerConfig: Map<String, Any?>? = null
 
-    override suspend fun connect(config: Map<String, String>) {
+    override suspend fun connect(config: Map<String, Any?>) {
         logger.debug("Initialising")
-        val clientConfig =
-            config
-                .filterKeys { it.startsWith("CLIENT_") }
-                .mapKeys { it.key.removePrefix("CLIENT_") }
+        @Suppress("UNCHECKED_CAST") val clientConfig = config["client"] as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        producerConfig = config["producer"] as Map<String, Any?>
         producerConfig =
             config
                 .filterKeys { it.startsWith("PRODUCER_") }

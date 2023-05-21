@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.pulsarClient)
     implementation(libs.kotlinCoroutines)
     implementation(libs.kotlinxDateTime)
+    implementation(libs.kotlinSerializationJson)
     implementation(libs.logback)
     testImplementation(libs.kotlinJunit)
 }

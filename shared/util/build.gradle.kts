@@ -27,5 +27,6 @@ tasks.build {
 
 dependencies {
     implementation(libs.kotlinCore)
+    implementation(libs.kotlinSerializationJson)
     testImplementation(libs.kotlinJunit)
 }

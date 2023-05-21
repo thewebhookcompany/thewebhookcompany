@@ -21,18 +21,13 @@ class PulsarConsumerImpl(
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var client: PulsarClient? = null
     private var consumerClient: PulsarConsumerClient<ByteArray>? = null
-    private var consumerConfig: Map<String, String>? = null
+    private var consumerConfig: Map<String, Any?>? = null
 
-    override suspend fun connect(config: Map<String, String>) {
+    override suspend fun connect(config: Map<String, Any?>) {
         logger.debug("Initialising")
-        val clientConfig =
-            config
-                .filterKeys { it.startsWith("CLIENT_") }
-                .mapKeys { it.key.removePrefix("CLIENT_") }
-        consumerConfig =
-            config
-                .filterKeys { it.startsWith("CONSUMER_") }
-                .mapKeys { it.key.removePrefix("CONSUMER_") }
+        @Suppress("UNCHECKED_CAST") val clientConfig = config["client"] as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        consumerConfig = config["consumer"] as Map<String, Any?>
         PulsarClient.builder().loadConf(clientConfig).build().let { client = it }
         logger.debug("Initialisation successful")
     }
@@ -50,11 +45,18 @@ class PulsarConsumerImpl(
                     .batchReceivePolicy(
                         BatchReceivePolicy.builder()
                             .maxNumMessages(
-                                consumerConfig?.get("batchReceivePolicy.maxNumMessages")?.toInt()
+                                consumerConfig
+                                    ?.get("batchReceivePolicy.maxNumMessages")
+                                    ?.toString()
+                                    ?.toInt()
                                     ?: 0
                             )
                             .maxNumBytes(
-                                consumerConfig?.get("batchReceivePolicy.maxNumBytes")?.toInt() ?: 0
+                                consumerConfig
+                                    ?.get("batchReceivePolicy.maxNumBytes")
+                                    ?.toString()
+                                    ?.toInt()
+                                    ?: 0
                             )
                             .messagesFromMultiTopicsEnabled(
                                 consumerConfig?.get(
