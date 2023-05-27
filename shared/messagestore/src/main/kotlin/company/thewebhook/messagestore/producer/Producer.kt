@@ -3,9 +3,12 @@ package company.thewebhook.messagestore.producer
 import company.thewebhook.messagestore.Provider
 import company.thewebhook.util.ConfigException
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 abstract class Producer<T> {
+    interface DelayedMessages<T> {
+        suspend fun publish(topic: String, message: T, delay: Duration): Boolean
+    }
+
     companion object {
         inline fun <reified T> get(provider: Provider): Producer<T> {
             return when (provider) {
@@ -32,11 +35,4 @@ abstract class Producer<T> {
     abstract suspend fun connect(config: Map<String, Any?>)
     abstract suspend fun publish(topic: String, message: T): Boolean
     abstract suspend fun close()
-}
-
-abstract class DelayedProducer<T> : Producer<T>() {
-    abstract suspend fun publish(topic: String, message: T, delay: Duration): Boolean
-    override suspend fun publish(topic: String, message: T): Boolean {
-        return publish(topic, message, 0.seconds)
-    }
 }

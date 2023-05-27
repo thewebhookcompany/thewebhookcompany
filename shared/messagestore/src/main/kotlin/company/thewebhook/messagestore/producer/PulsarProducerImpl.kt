@@ -5,6 +5,7 @@ import company.thewebhook.util.toBase64
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.pulsar.client.api.MessageId
@@ -14,7 +15,7 @@ import org.apache.pulsar.client.api.PulsarClientException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class PulsarProducerImpl : DelayedProducer<ByteArray>() {
+class PulsarProducerImpl : Producer<ByteArray>(), Producer.DelayedMessages<ByteArray> {
     private val instanceId = UUID.randomUUID().toBase64()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var client: PulsarClient? = null
@@ -68,16 +69,14 @@ class PulsarProducerImpl : DelayedProducer<ByteArray>() {
         return messageBuilder.send()
     }
 
+    override suspend fun publish(topic: String, message: ByteArray): Boolean {
+        return publish(topic, message, 0.seconds)
+    }
+
     override suspend fun publish(topic: String, message: ByteArray, delay: Duration): Boolean {
         return withContext(Dispatchers.IO) {
-            val messageId =
-                try {
-                    logger.trace("Publishing message to topic $topic")
-                    publishInternal(topic, message, delay)
-                } catch (e: PulsarClientException.AlreadyClosedException) {
-                    logger.debug("Republishing message to topic $topic")
-                    publishInternal(topic, message, delay)
-                }
+            logger.trace("Publishing message to topic $topic")
+            val messageId = publishInternal(topic, message, delay)
             logger.trace("Publishing message to topic $topic successful with message id $messageId")
             true
         }
