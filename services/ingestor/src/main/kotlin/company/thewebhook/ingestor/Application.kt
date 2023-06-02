@@ -2,9 +2,11 @@ package company.thewebhook.ingestor
 
 import company.thewebhook.ingestor.models.WebhookRequestData
 import company.thewebhook.ingestor.plugins.*
+import company.thewebhook.messagestore.ProviderMapper
 import company.thewebhook.messagestore.producer.Producer
-import company.thewebhook.messagestore.util.ApplicationEnv
-import company.thewebhook.messagestore.util.MessageTooLargeException
+import company.thewebhook.util.ApplicationEnv
+import company.thewebhook.util.ConfigException
+import company.thewebhook.util.MessageTooLargeException
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -19,7 +21,6 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
-import org.koin.ktor.ext.inject
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -37,14 +38,11 @@ fun Application.module() = launch {
     configureSerialization()
     configureMonitoring()
     configureHTTP()
-    configureKoin()
     configureRouting()
     val blacklistedHeaders =
-        ApplicationEnv.getOrDefault(ingestorBlacklistedHeadersEnvKey, "").lowercase().split(",")
+        ApplicationEnv.get(ingestorBlacklistedHeadersEnvKey, "").lowercase().split(",")
     val blacklistedHeaderPrefixes =
-        ApplicationEnv.getOrDefault(ingestorBlacklistedHeaderPrefixesEnvKey, "")
-            .lowercase()
-            .split(",")
+        ApplicationEnv.get(ingestorBlacklistedHeaderPrefixesEnvKey, "").lowercase().split(",")
 
     val serverHostRegexString =
         System.getenv(ingestorServerHostValidationRegexEnvKey)
@@ -52,8 +50,12 @@ fun Application.module() = launch {
                 "$ingestorServerHostValidationRegexEnvKey cannot be empty"
             )
 
-    val producer by inject<Producer<ByteArray>>()
-    producer.connect(Producer.getConfigFromEnv())
+    val providerMapper = ProviderMapper()
+    val config =
+        providerMapper.getProducerProviderConfig(listOf("incoming"))
+            ?: throw ConfigException("No provider configured for \"incoming\" topic")
+    val producer: Producer<ByteArray> = Producer.get(config.provider)
+    producer.connect(config.internalConfig)
 
     val serverHostRegex = Regex(serverHostRegexString)
 
@@ -61,6 +63,7 @@ fun Application.module() = launch {
         HttpMethod.DefaultMethods.forEach {
             route("{...}", it) {
                 handle {
+                    val receivedAt = Clock.System.now().toEpochMilliseconds()
                     val serverHost = call.request.origin.serverHost.lowercase()
                     val remoteHost = call.request.origin.remoteHost.lowercase()
 
@@ -84,14 +87,14 @@ fun Application.module() = launch {
                                     } && !blacklistedHeaders.contains(key.lowercase())
                                 },
                                 call.receiveText(),
-                                Clock.System.now().toEpochMilliseconds(),
+                                receivedAt,
                                 remoteHost,
                                 serverHost,
                             )
                         )
 
                     try {
-                        val res = producer.publish("$serverHost-incoming", webhookData)
+                        val res = producer.publish("incoming", webhookData)
                         call.respond(
                             if (res) {
                                 HttpStatusCode.OK

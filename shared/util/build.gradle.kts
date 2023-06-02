@@ -1,7 +1,6 @@
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.kotlinJvm)
-    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.spotless)
 }
 
@@ -27,14 +26,7 @@ tasks.build {
 }
 
 dependencies {
-    implementation("company.thewebhook:util")
-
     implementation(libs.kotlinCore)
-    implementation(libs.kafkaClients)
-    implementation(libs.pulsarClient)
-    implementation(libs.kotlinCoroutines)
-    implementation(libs.kotlinxDateTime)
     implementation(libs.kotlinSerializationJson)
-    implementation(libs.logback)
     testImplementation(libs.kotlinJunit)
 }

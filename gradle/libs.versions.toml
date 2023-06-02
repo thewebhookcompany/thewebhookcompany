@@ -2,7 +2,7 @@
 ktorVersion="2.2.4"
 kotlinVersion="1.8.10"
 kotlinCoroutinesVersion="1.6.4"
-kotlinSerializationCborVersion="1.5.0"
+kotlinSerializationVersion="1.5.1"
 logbackVersion="1.2.11"
 exposedVersion="0.41.1"
 prometheusVersion="1.6.3"
@@ -13,11 +13,13 @@ spotlessVersion="6.16.0"
 ktfmtVersion="0.43"
 kafkaLibVersion="3.4.0"
 kotlinxDateTimeVersion="0.4.0"
+pulsarClientVersion="3.0.0"
 
 [libraries]
 kotlinCore = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinVersion" }
 kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "kotlinCoroutinesVersion"}
-kotlinSerializationCbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor-jvm", version.ref = "kotlinSerializationCborVersion" }
+kotlinSerializationCbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor-jvm", version.ref = "kotlinSerializationVersion" }
+kotlinSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm", version.ref = "kotlinSerializationVersion" }
 
 ktorSerialization =  { module = "io.ktor:ktor-serialization-kotlinx-json-jvm", version.ref = "ktorVersion"}
 
@@ -51,6 +53,8 @@ kotlinJunit =  { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref 
 kafkaClients =  { module = "org.apache.kafka:kafka-clients", version.ref = "kafkaLibVersion"}
 
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTimeVersion" }
+
+pulsarClient = { module = "org.apache.pulsar:pulsar-client", version.ref = "pulsarClientVersion" }
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion"}
