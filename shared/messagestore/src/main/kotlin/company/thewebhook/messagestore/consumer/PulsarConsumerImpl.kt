@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 
 class PulsarConsumerImpl(
     private val readTimeout: Duration,
-) : Consumer<ByteArray>() {
+) : Consumer<ByteArray>(), Consumer.MessageAcknowledgment<ByteArray> {
     private val instanceId = UUID.randomUUID().toBase64()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var client: PulsarClient? = null
@@ -106,6 +106,20 @@ class PulsarConsumerImpl(
             withContext(Dispatchers.IO) {
                 unacknowledgedMessages.forEach { mId -> it.negativeAcknowledge(mId) }
             }
+        }
+            ?: throw NotConnectedException()
+    }
+
+    override suspend fun ack(messageId: MessageId) {
+        consumerClient?.let {
+            withContext(Dispatchers.IO) { it.acknowledge(messageId) }
+        }
+            ?: throw NotConnectedException()
+    }
+
+    override suspend fun nack(messageId: MessageId) {
+        consumerClient?.let {
+            withContext(Dispatchers.IO) { it.negativeAcknowledge(messageId) }
         }
             ?: throw NotConnectedException()
     }
