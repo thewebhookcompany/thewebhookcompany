@@ -67,6 +67,7 @@ class PulsarConsumerImpl(
                             .build()
                     )
                     .topics(topics)
+                    .subscriptionName("sub-all-topics")
                     .subscribe()
             logger.trace("Subscription complete")
         }
@@ -110,16 +111,16 @@ class PulsarConsumerImpl(
             ?: throw NotConnectedException()
     }
 
-    override suspend fun ack(messageId: MessageId) {
+    override suspend fun ack(messageId: ByteArray) {
         consumerClient?.let {
-            withContext(Dispatchers.IO) { it.acknowledge(messageId) }
+            withContext(Dispatchers.IO) { it.acknowledge(MessageId.fromByteArray(messageId)) }
         }
             ?: throw NotConnectedException()
     }
 
-    override suspend fun nack(messageId: MessageId) {
+    override suspend fun nack(messageId: ByteArray) {
         consumerClient?.let {
-            withContext(Dispatchers.IO) { it.negativeAcknowledge(messageId) }
+            withContext(Dispatchers.IO) { it.negativeAcknowledge(MessageId.fromByteArray(messageId)) }
         }
             ?: throw NotConnectedException()
     }

@@ -2,13 +2,12 @@ package company.thewebhook.messagestore.consumer
 
 import company.thewebhook.messagestore.Provider
 import company.thewebhook.util.ConfigException
-import org.apache.pulsar.client.api.MessageId
 import kotlin.time.Duration
 
 abstract class Consumer<T> {
     interface MessageAcknowledgment<T> {
-        suspend fun ack(messageId: MessageId)
-        suspend fun nack(messageId: MessageId)
+        suspend fun ack(messageId: ByteArray)
+        suspend fun nack(messageId: ByteArray)
     }
 
     companion object {
