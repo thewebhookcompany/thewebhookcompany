@@ -36,6 +36,7 @@ abstract class Consumer<T> {
     data class Record<T>(
         val topic: String,
         val message: T,
+        val messageId: String,
     )
 
     abstract suspend fun connect(config: Map<String, Any?>)

@@ -63,7 +63,7 @@ class KafkaConsumerImpl<T>(
             withContext(Dispatchers.IO) {
                 val records = consumer.poll(readTimeoutJavaClass)
                 records
-                    .map { Record(it.topic(), it.value()) }
+                    .map { Record(it.topic(), it.value(), "") }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }

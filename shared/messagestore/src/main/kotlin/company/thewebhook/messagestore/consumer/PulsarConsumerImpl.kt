@@ -88,7 +88,7 @@ class PulsarConsumerImpl(
                 val records = consumer.batchReceive()
                 unacknowledgedMessages.addAll(records.map { r -> r.messageId })
                 records
-                    .map { Record(it.topicName, it.value) }
+                    .map { Record(it.topicName, it.value, it.messageId.toByteArray().toString(Charsets.UTF_8)) }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }
