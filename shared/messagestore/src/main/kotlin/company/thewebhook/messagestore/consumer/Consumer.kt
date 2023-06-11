@@ -6,8 +6,8 @@ import kotlin.time.Duration
 
 abstract class Consumer<T> {
     interface MessageAcknowledgment<T> {
-        suspend fun ack(messageId: ByteArray)
-        suspend fun nack(messageId: ByteArray)
+        suspend fun ack(messageId: String)
+        suspend fun nack(messageId: String)
     }
 
     companion object {

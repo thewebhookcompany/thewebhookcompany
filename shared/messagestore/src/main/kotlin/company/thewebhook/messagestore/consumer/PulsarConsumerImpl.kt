@@ -88,7 +88,7 @@ class PulsarConsumerImpl(
                 val records = consumer.batchReceive()
                 unacknowledgedMessages.addAll(records.map { r -> r.messageId })
                 records
-                    .map { Record(it.topicName, it.value, it.messageId.toByteArray().toString(Charsets.UTF_8)) }
+                    .map { Record(it.topicName, it.value, String(Base64.getEncoder().encode(it.messageId.toByteArray()))) }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }
@@ -111,16 +111,16 @@ class PulsarConsumerImpl(
             ?: throw NotConnectedException()
     }
 
-    override suspend fun ack(messageId: ByteArray) {
+    override suspend fun ack(messageId: String) {
         consumerClient?.let {
-            withContext(Dispatchers.IO) { it.acknowledge(MessageId.fromByteArray(messageId)) }
+            withContext(Dispatchers.IO) { it.acknowledge(MessageId.fromByteArray(Base64.getDecoder().decode(messageId.toByteArray()))) }
         }
             ?: throw NotConnectedException()
     }
 
-    override suspend fun nack(messageId: ByteArray) {
+    override suspend fun nack(messageId: String) {
         consumerClient?.let {
-            withContext(Dispatchers.IO) { it.negativeAcknowledge(MessageId.fromByteArray(messageId)) }
+            withContext(Dispatchers.IO) { it.negativeAcknowledge(MessageId.fromByteArray(Base64.getDecoder().decode(messageId.toByteArray()))) }
         }
             ?: throw NotConnectedException()
     }

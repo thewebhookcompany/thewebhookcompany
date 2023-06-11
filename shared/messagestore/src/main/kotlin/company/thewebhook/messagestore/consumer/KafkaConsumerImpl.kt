@@ -13,6 +13,19 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.nio.ByteBuffer
+
+fun Long.toByteArray(): ByteArray {
+    val buffer = ByteBuffer.allocate(Long.SIZE_BYTES)
+    buffer.putLong(this)
+    return buffer.array()
+}
+
+fun Int.toByteArray(): ByteArray {
+    val buffer = ByteBuffer.allocate(Int.SIZE_BYTES)
+    buffer.putInt(this)
+    return buffer.array()
+}
 
 class KafkaConsumerImpl<T>(
     private val readTimeout: Duration,
@@ -63,7 +76,13 @@ class KafkaConsumerImpl<T>(
             withContext(Dispatchers.IO) {
                 val records = consumer.poll(readTimeoutJavaClass)
                 records
-                    .map { Record(it.topic(), it.value(), "") }
+                    .map { record ->
+                        val topic = record.topic()
+                        val offset = record.offset()
+                        val value = record.value()
+                        val partition = record.partition()
+
+                        Record(topic, value, String(Base64.getEncoder().encode(offset.toByteArray() + partition.toByteArray() + topic.toByteArray()))) }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }
