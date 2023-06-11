@@ -2,6 +2,7 @@ package company.thewebhook.messagestore.consumer
 
 import company.thewebhook.util.NotConnectedException
 import company.thewebhook.util.toBase64
+import company.thewebhook.util.toByteArray
 import java.util.*
 import kotlin.time.Duration
 import kotlinx.coroutines.Dispatchers
@@ -13,19 +14,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.nio.ByteBuffer
-
-fun Long.toByteArray(): ByteArray {
-    val buffer = ByteBuffer.allocate(Long.SIZE_BYTES)
-    buffer.putLong(this)
-    return buffer.array()
-}
-
-fun Int.toByteArray(): ByteArray {
-    val buffer = ByteBuffer.allocate(Int.SIZE_BYTES)
-    buffer.putInt(this)
-    return buffer.array()
-}
 
 class KafkaConsumerImpl<T>(
     private val readTimeout: Duration,
