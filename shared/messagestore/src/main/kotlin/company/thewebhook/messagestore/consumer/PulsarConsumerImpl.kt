@@ -111,21 +111,41 @@ class PulsarConsumerImpl(
     }
 
     override suspend fun ack(messageId: String) {
-        val messageIdAsByteArray = MessageId.fromByteArray(
-            Base64
-                .getDecoder()
-                .decode(messageId.toByteArray())
-        ) ?: throw IllegalArgumentException("The Message ID passed is invalid: $messageId")
+        var messageIdFromByteArray: MessageId? = null
+
+        try {
+            messageIdFromByteArray = MessageId.fromByteArray(
+                Base64
+                    .getDecoder()
+                    .decode(messageId.toByteArray())
+            )
+        } catch(_: Exception) { }
+
+        if(messageIdFromByteArray === null)
+            throw IllegalArgumentException("The Message ID passed is invalid: $messageId")
 
         consumerClient?.let {
-            withContext(Dispatchers.IO) { it.acknowledge(messageIdAsByteArray) }
+            withContext(Dispatchers.IO) { it.acknowledge(messageIdFromByteArray) }
         }
             ?: throw NotConnectedException()
     }
 
     override suspend fun nack(messageId: String) {
+        var messageIdFromByteArray: MessageId? = null
+
+        try {
+            messageIdFromByteArray = MessageId.fromByteArray(
+                Base64
+                    .getDecoder()
+                    .decode(messageId.toByteArray())
+            )
+        } catch(_: Exception) { }
+
+        if(messageIdFromByteArray === null)
+            throw IllegalArgumentException("The Message ID passed is invalid: $messageId")
+
         consumerClient?.let {
-            withContext(Dispatchers.IO) { it.negativeAcknowledge(MessageId.fromByteArray(Base64.getDecoder().decode(messageId.toByteArray()))) }
+            withContext(Dispatchers.IO) { it.negativeAcknowledge(messageIdFromByteArray) }
         }
             ?: throw NotConnectedException()
     }
