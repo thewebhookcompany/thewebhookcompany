@@ -67,7 +67,6 @@ class PulsarConsumerImpl(
                             .build()
                     )
                     .topics(topics)
-                    .subscriptionName("sub-all-topics")
                     .subscribe()
             logger.trace("Subscription complete")
         }
@@ -112,8 +111,14 @@ class PulsarConsumerImpl(
     }
 
     override suspend fun ack(messageId: String) {
+        val messageIdAsByteArray = MessageId.fromByteArray(
+            Base64
+                .getDecoder()
+                .decode(messageId.toByteArray())
+        ) ?: throw IllegalArgumentException("The Message ID passed is invalid: $messageId")
+
         consumerClient?.let {
-            withContext(Dispatchers.IO) { it.acknowledge(MessageId.fromByteArray(Base64.getDecoder().decode(messageId.toByteArray()))) }
+            withContext(Dispatchers.IO) { it.acknowledge(messageIdAsByteArray) }
         }
             ?: throw NotConnectedException()
     }
