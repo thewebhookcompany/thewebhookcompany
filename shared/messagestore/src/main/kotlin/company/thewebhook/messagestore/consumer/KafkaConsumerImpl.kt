@@ -2,6 +2,7 @@ package company.thewebhook.messagestore.consumer
 
 import company.thewebhook.util.NotConnectedException
 import company.thewebhook.util.toBase64
+import company.thewebhook.util.toByteArray
 import java.util.*
 import kotlin.time.Duration
 import kotlinx.coroutines.Dispatchers
@@ -63,7 +64,13 @@ class KafkaConsumerImpl<T>(
             withContext(Dispatchers.IO) {
                 val records = consumer.poll(readTimeoutJavaClass)
                 records
-                    .map { Record(it.topic(), it.value()) }
+                    .map { record ->
+                        val topic = record.topic()
+                        val offset = record.offset()
+                        val value = record.value()
+                        val partition = record.partition()
+
+                        Record(topic, value, String(Base64.getEncoder().encode(offset.toByteArray() + partition.toByteArray() + topic.toByteArray()))) }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }

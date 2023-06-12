@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 
 class PulsarConsumerImpl(
     private val readTimeout: Duration,
-) : Consumer<ByteArray>() {
+) : Consumer<ByteArray>(), Consumer.MessageAcknowledgment<ByteArray> {
     private val instanceId = UUID.randomUUID().toBase64()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name + "-" + instanceId)
     private var client: PulsarClient? = null
@@ -87,7 +87,7 @@ class PulsarConsumerImpl(
                 val records = consumer.batchReceive()
                 unacknowledgedMessages.addAll(records.map { r -> r.messageId })
                 records
-                    .map { Record(it.topicName, it.value) }
+                    .map { Record(it.topicName, it.value, String(Base64.getEncoder().encode(it.messageId.toByteArray()))) }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }
@@ -106,6 +106,46 @@ class PulsarConsumerImpl(
             withContext(Dispatchers.IO) {
                 unacknowledgedMessages.forEach { mId -> it.negativeAcknowledge(mId) }
             }
+        }
+            ?: throw NotConnectedException()
+    }
+
+    override suspend fun ack(messageId: String) {
+        var messageIdFromByteArray: MessageId? = null
+
+        try {
+            messageIdFromByteArray = MessageId.fromByteArray(
+                Base64
+                    .getDecoder()
+                    .decode(messageId.toByteArray())
+            )
+        } catch(_: Exception) { }
+
+        if(messageIdFromByteArray === null)
+            throw IllegalArgumentException("The Message ID passed is invalid: $messageId")
+
+        consumerClient?.let {
+            withContext(Dispatchers.IO) { it.acknowledge(messageIdFromByteArray) }
+        }
+            ?: throw NotConnectedException()
+    }
+
+    override suspend fun nack(messageId: String) {
+        var messageIdFromByteArray: MessageId? = null
+
+        try {
+            messageIdFromByteArray = MessageId.fromByteArray(
+                Base64
+                    .getDecoder()
+                    .decode(messageId.toByteArray())
+            )
+        } catch(_: Exception) { }
+
+        if(messageIdFromByteArray === null)
+            throw IllegalArgumentException("The Message ID passed is invalid: $messageId")
+
+        consumerClient?.let {
+            withContext(Dispatchers.IO) { it.negativeAcknowledge(messageIdFromByteArray) }
         }
             ?: throw NotConnectedException()
     }
