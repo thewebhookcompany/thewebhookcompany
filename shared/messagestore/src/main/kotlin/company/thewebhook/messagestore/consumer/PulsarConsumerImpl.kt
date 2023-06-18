@@ -87,7 +87,13 @@ class PulsarConsumerImpl(
                 val records = consumer.batchReceive()
                 unacknowledgedMessages.addAll(records.map { r -> r.messageId })
                 records
-                    .map { Record(it.topicName, it.value, String(Base64.getEncoder().encode(it.messageId.toByteArray()))) }
+                    .map {
+                        Record(
+                            it.topicName,
+                            it.value,
+                            String(Base64.getEncoder().encode(it.messageId.toByteArray()))
+                        )
+                    }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }
@@ -114,14 +120,11 @@ class PulsarConsumerImpl(
         var messageIdFromByteArray: MessageId? = null
 
         try {
-            messageIdFromByteArray = MessageId.fromByteArray(
-                Base64
-                    .getDecoder()
-                    .decode(messageId.toByteArray())
-            )
-        } catch(_: Exception) { }
+            messageIdFromByteArray =
+                MessageId.fromByteArray(Base64.getDecoder().decode(messageId.toByteArray()))
+        } catch (_: Exception) {}
 
-        if(messageIdFromByteArray === null)
+        if (messageIdFromByteArray === null)
             throw IllegalArgumentException("The Message ID passed is invalid: $messageId")
 
         consumerClient?.let {
@@ -134,14 +137,11 @@ class PulsarConsumerImpl(
         var messageIdFromByteArray: MessageId? = null
 
         try {
-            messageIdFromByteArray = MessageId.fromByteArray(
-                Base64
-                    .getDecoder()
-                    .decode(messageId.toByteArray())
-            )
-        } catch(_: Exception) { }
+            messageIdFromByteArray =
+                MessageId.fromByteArray(Base64.getDecoder().decode(messageId.toByteArray()))
+        } catch (_: Exception) {}
 
-        if(messageIdFromByteArray === null)
+        if (messageIdFromByteArray === null)
             throw IllegalArgumentException("The Message ID passed is invalid: $messageId")
 
         consumerClient?.let {

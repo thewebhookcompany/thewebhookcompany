@@ -1,9 +1,10 @@
-package company.thewebhook.ingestor.models
+package company.thewebhook.util.models
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class WebhookRequestData(
+    val id: String,
     val method: String,
     val uri: String,
     val headers: Map<String, List<String>>,

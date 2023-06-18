@@ -70,7 +70,19 @@ class KafkaConsumerImpl<T>(
                         val value = record.value()
                         val partition = record.partition()
 
-                        Record(topic, value, String(Base64.getEncoder().encode(offset.toByteArray() + partition.toByteArray() + topic.toByteArray()))) }
+                        Record(
+                            topic,
+                            value,
+                            String(
+                                Base64.getEncoder()
+                                    .encode(
+                                        offset.toByteArray() +
+                                            partition.toByteArray() +
+                                            topic.toByteArray()
+                                    )
+                            )
+                        )
+                    }
                     .also { logger.trace("Consumed ${it.size} messages") }
             }
         }

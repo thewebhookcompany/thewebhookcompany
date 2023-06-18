@@ -111,5 +111,7 @@ services:
     ports:
       - "9527:9527"
       - "7750:7750"
+    volumes:
+      - ./data/config:/pulsar-manager/data/config
     environment:
-      SPRING_CONFIGURATION_FILE: /pulsar-manager/pulsar-manager/application.properties
+      SPRING_CONFIGURATION_FILE: /pulsar-manager/data/config/application.properties
