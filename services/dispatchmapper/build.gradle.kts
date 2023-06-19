@@ -27,7 +27,18 @@ tasks.build {
 }
 
 dependencies {
-    implementation(libs.kotlinCore)
-    implementation(libs.kotlinSerializationJson)
+    implementation("company.thewebhook:messagestore")
+    implementation("company.thewebhook:util")
+
+    implementation(libs.kotlinSerializationCbor)
+    implementation(libs.kotlinCoroutines)
+
+    implementation(libs.kotlinxDateTime)
+
+    implementation(libs.logback)
+
+    implementation(libs.koinCore)
+    implementation(libs.koinSlf4j)
+
     testImplementation(libs.kotlinJunit)
 }

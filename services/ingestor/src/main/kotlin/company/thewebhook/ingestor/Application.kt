@@ -1,12 +1,13 @@
 package company.thewebhook.ingestor
 
-import company.thewebhook.ingestor.models.WebhookRequestData
 import company.thewebhook.ingestor.plugins.*
 import company.thewebhook.messagestore.ProviderMapper
 import company.thewebhook.messagestore.producer.Producer
 import company.thewebhook.util.ApplicationEnv
 import company.thewebhook.util.ConfigException
 import company.thewebhook.util.MessageTooLargeException
+import company.thewebhook.util.models.WebhookRequestData
+import company.thewebhook.util.toBase64
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -15,6 +16,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import java.util.UUID
 import kotlin.text.Regex
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -24,13 +26,11 @@ import kotlinx.serialization.encodeToByteArray
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
-class ApplicationConfigException(message: String) : Exception(message)
-
-const val ingestorBlacklistedHeadersEnvKey =
+private const val INGESTOR_BLACKLISTED_HEADERS_ENV_KEY =
     "${ApplicationEnv.envPrefix}INGESTOR_BLACKLISTED_HEADERS"
-const val ingestorBlacklistedHeaderPrefixesEnvKey =
+private const val INGESTOR_BLACKLISTED_HEADER_PREFIXES_ENV_KEY =
     "${ApplicationEnv.envPrefix}INGESTOR_BLACKLISTED_HEADER_PREFIXES"
-const val ingestorServerHostValidationRegexEnvKey =
+private const val INGESTOR_SERVER_HOST_VALIDATION_REGEX_ENV_KEY =
     "${ApplicationEnv.envPrefix}INGESTOR_SERVER_HOST_VALIDATION_REGEX"
 
 @ExperimentalSerializationApi
@@ -40,14 +40,14 @@ fun Application.module() = launch {
     configureHTTP()
     configureRouting()
     val blacklistedHeaders =
-        ApplicationEnv.get(ingestorBlacklistedHeadersEnvKey, "").lowercase().split(",")
+        ApplicationEnv.get(INGESTOR_BLACKLISTED_HEADERS_ENV_KEY, "").lowercase().split(",")
     val blacklistedHeaderPrefixes =
-        ApplicationEnv.get(ingestorBlacklistedHeaderPrefixesEnvKey, "").lowercase().split(",")
+        ApplicationEnv.get(INGESTOR_BLACKLISTED_HEADER_PREFIXES_ENV_KEY, "").lowercase().split(",")
 
     val serverHostRegexString =
-        System.getenv(ingestorServerHostValidationRegexEnvKey)
-            ?: throw ApplicationConfigException(
-                "$ingestorServerHostValidationRegexEnvKey cannot be empty"
+        ApplicationEnv.get(INGESTOR_SERVER_HOST_VALIDATION_REGEX_ENV_KEY)
+            ?: throw ConfigException(
+                "$INGESTOR_SERVER_HOST_VALIDATION_REGEX_ENV_KEY cannot be empty"
             )
 
     val providerMapper = ProviderMapper()
@@ -78,6 +78,7 @@ fun Application.module() = launch {
                     val webhookData =
                         Cbor.encodeToByteArray(
                             WebhookRequestData(
+                                UUID.randomUUID().toBase64(),
                                 call.request.httpMethod.value,
                                 call.request.uri,
                                 call.request.headers.toMap().filterKeys { key ->
