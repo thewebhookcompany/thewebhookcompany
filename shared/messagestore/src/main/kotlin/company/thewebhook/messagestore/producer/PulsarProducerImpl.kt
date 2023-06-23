@@ -73,12 +73,41 @@ class PulsarProducerImpl : Producer<ByteArray>(), Producer.DelayedMessages<ByteA
         return publish(topic, message, 0.seconds)
     }
 
+    override suspend fun publish(topic: String, messages: List<ByteArray>): List<Boolean> {
+        return publish(topic, messages, 0.seconds)
+    }
+
     override suspend fun publish(topic: String, message: ByteArray, delay: Duration): Boolean {
+        return publish(topic, listOf(message), listOf(delay))[0]
+    }
+
+    override suspend fun publish(
+        topic: String,
+        messages: List<ByteArray>,
+        delay: Duration
+    ): List<Boolean> {
+        return publish(topic, messages, messages.map { delay })
+    }
+
+    override suspend fun publish(
+        topic: String,
+        messages: List<ByteArray>,
+        delays: List<Duration>
+    ): List<Boolean> {
+        if (messages.size != delays.size) {
+            throw IllegalArgumentException(
+                "messages (size: ${messages.size
+            }) and delays (size: ${delays.size}) must be of the same size"
+            )
+        }
         return withContext(Dispatchers.IO) {
-            logger.trace("Publishing message to topic $topic")
-            val messageId = publishInternal(topic, message, delay)
-            logger.trace("Publishing message to topic $topic successful with message id $messageId")
-            true
+            logger.trace("Publishing ${messages.size} messages to topic $topic")
+            messages.mapIndexed { i, message ->
+                val delay = delays[i]
+                publishInternal(topic, message, delay)
+            }
+            logger.trace("Publishing ${messages.size} messages to topic $topic successful")
+            messages.map { true }
         }
     }
 

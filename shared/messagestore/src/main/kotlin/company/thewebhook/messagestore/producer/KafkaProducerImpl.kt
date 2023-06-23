@@ -38,36 +38,39 @@ class KafkaProducerImpl<T> : Producer<T>() {
         logger.debug("Connection established")
     }
 
-    override suspend fun publish(topic: String, message: T): Boolean {
-        logger.trace("Publishing message to topic $topic")
+    private suspend fun publishInternal(topic: String, message: T): Boolean {
         return producerClient?.let { producer ->
-            withContext(Dispatchers.IO) {
-                suspendCoroutine {
-                    producer.send(ProducerRecord(topic, message)) {
-                        recordMetadata: RecordMetadata?,
-                        exception: Exception? ->
-                        if (exception != null) {
-                            logger.error(
-                                "Exception thrown while sending message to kafka",
-                                exception
-                            )
-                            if (exception is RecordTooLargeException) {
-                                return@send it.resumeWithException(MessageTooLargeException())
-                            }
-                            return@send it.resumeWithException(exception)
+            suspendCoroutine {
+                producer.send(ProducerRecord(topic, message)) {
+                    recordMetadata: RecordMetadata?,
+                    exception: Exception? ->
+                    if (exception != null) {
+                        logger.error("Exception thrown while sending message to kafka", exception)
+                        if (exception is RecordTooLargeException) {
+                            return@send it.resumeWithException(MessageTooLargeException())
                         }
-                        if (recordMetadata != null) {
-                            logger.trace("Publishing message to topic $topic success")
-                            return@send it.resume(true)
-                        }
-                        logger.error("Result Record Metadata is empty")
-                        val e = EmptyResultException()
-                        it.resumeWithException(e)
+                        return@send it.resumeWithException(exception)
                     }
+                    if (recordMetadata != null) {
+                        logger.trace("Publishing message to topic $topic success")
+                        return@send it.resume(true)
+                    }
+                    logger.error("Result Record Metadata is empty")
+                    val e = EmptyResultException()
+                    it.resumeWithException(e)
                 }
             }
         }
             ?: throw NotConnectedException()
+    }
+
+    override suspend fun publish(topic: String, message: T): Boolean {
+        return publish(topic, listOf(message))[0]
+    }
+
+    override suspend fun publish(topic: String, messages: List<T>): List<Boolean> {
+        logger.trace("Publishing ${messages.size} messages to topic $topic")
+        return messages.map { publishInternal(topic, it) }
     }
 
     override suspend fun close() {

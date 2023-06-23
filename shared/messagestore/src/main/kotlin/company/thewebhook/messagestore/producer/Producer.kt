@@ -7,6 +7,8 @@ import kotlin.time.Duration
 abstract class Producer<T> {
     interface DelayedMessages<T> {
         suspend fun publish(topic: String, message: T, delay: Duration): Boolean
+        suspend fun publish(topic: String, messages: List<T>, delay: Duration): List<Boolean>
+        suspend fun publish(topic: String, messages: List<T>, delays: List<Duration>): List<Boolean>
     }
 
     companion object {
@@ -34,5 +36,6 @@ abstract class Producer<T> {
 
     abstract suspend fun connect(config: Map<String, Any?>)
     abstract suspend fun publish(topic: String, message: T): Boolean
+    abstract suspend fun publish(topic: String, messages: List<T>): List<Boolean>
     abstract suspend fun close()
 }
