@@ -64,7 +64,7 @@ class DestinationDaoImpl: DestinationDao() {
         return destinationResult.associate {
             it[DestinationMappingTable.id] to toDestination(
                 it,
-                getOnFailureDestinations(it[DestinationTable.id], it[DestinationMappingTable.level])
+                getOnFailureDestinations(it[DestinationMappingTable.destination], it[DestinationMappingTable.level])
             )
         }
     }

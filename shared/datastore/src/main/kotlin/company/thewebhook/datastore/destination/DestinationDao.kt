@@ -1,7 +1,6 @@
 package company.thewebhook.datastore.destination
 
 import company.thewebhook.util.models.Destination
-import org.jetbrains.exposed.sql.ResultRow
 
 abstract class DestinationDao {
     companion object {

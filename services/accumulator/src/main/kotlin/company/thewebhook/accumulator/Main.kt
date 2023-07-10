@@ -1,5 +1,6 @@
 package company.thewebhook.accumulator
 
+import company.thewebhook.datastore.DatabaseFactory
 import company.thewebhook.datastore.destination.DestinationDao
 import company.thewebhook.messagestore.ProviderMapper
 import company.thewebhook.messagestore.consumer.Consumer
@@ -33,7 +34,7 @@ suspend fun getOutgoingDto(webhookRequestData: WebhookRequestData): OutgoingMapp
 }
 
 @OptIn(ExperimentalSerializationApi::class)
-suspend fun main(args: Array<String>) {
+suspend fun main() {
     val providerMapper = ProviderMapper()
     val producerConfig =
         providerMapper.getProducerProviderConfig(listOf("outgoing-mapping"))
@@ -45,6 +46,8 @@ suspend fun main(args: Array<String>) {
             )
     val producer = Producer.get<ByteArray>(producerConfig.provider)
     producer.connect(producerConfig.internalConfig)
+
+    DatabaseFactory.connect()
 
     withContext(Dispatchers.IO) {
         launch {
