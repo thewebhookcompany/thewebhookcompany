@@ -14,6 +14,8 @@ ktfmtVersion="0.43"
 kafkaLibVersion="3.4.0"
 kotlinxDateTimeVersion="0.4.0"
 pulsarClientVersion="3.0.0"
+hikaricpVersion = "5.0.1"
+postgresql = "42.6.0"
 
 [libraries]
 kotlinCore = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinVersion" }
@@ -40,8 +42,9 @@ micrometerPrometheus = { module = "io.micrometer:micrometer-registry-prometheus"
 
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logbackVersion" }
 
-exposedCore =  { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedVersion"}
-exposedJdbc =  { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedVersion"}
+exposedCore =  { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedVersion" }
+exposedJdbc =  { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedVersion" }
+exposedDatetime = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposedVersion" }
 
 koinKtor =  { module = "io.insert-koin:koin-ktor", version.ref = "koinKtorVersion"}
 koinCore =  { module = "io.insert-koin:koin-core", version.ref = "koinCoreVersion"}
@@ -55,6 +58,9 @@ kafkaClients =  { module = "org.apache.kafka:kafka-clients", version.ref = "kafk
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTimeVersion" }
 
 pulsarClient = { module = "org.apache.pulsar:pulsar-client", version.ref = "pulsarClientVersion" }
+
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricpVersion" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion"}

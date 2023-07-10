@@ -27,9 +27,7 @@ tasks.build {
 }
 
 dependencies {
-    implementation("company.thewebhook:messagestore")
     implementation("company.thewebhook:util")
-    implementation("company.thewebhook:datastore")
 
     implementation(libs.kotlinxDateTime)
 
@@ -40,8 +38,6 @@ dependencies {
 
     implementation(libs.kotlinCore)
     implementation(libs.kotlinCoroutines)
-    implementation(libs.kotlinSerializationCbor)
-
     implementation(libs.exposedJdbc)
     implementation(libs.exposedCore)
     implementation(libs.exposedDatetime)
