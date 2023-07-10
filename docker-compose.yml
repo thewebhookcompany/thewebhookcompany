@@ -115,3 +115,21 @@ services:
       - ./data/config:/pulsar-manager/data/config
     environment:
       SPRING_CONFIGURATION_FILE: /pulsar-manager/data/config/application.properties
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: twc_Password
+      POSTGRES_DB: twc
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
